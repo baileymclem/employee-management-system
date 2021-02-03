@@ -27,7 +27,7 @@ connection.connect(function(err) {
 function start() {
   inquirer
     .prompt({
-      name: 'init',
+      name: 'userChoice',
       type: 'list',
       message: 'What would you like to do?',
       choices: [
@@ -41,9 +41,9 @@ function start() {
         ]
     })
     .then(function(answer) {
-      // based on their answer, either call the bid or the post functions
-      if (answer.postOrBid === 'POST') {
-        postAuction();
+      // based on their answer, call correct function
+      if (answer.userChoice === 'View All Employees') {
+        viewEmployees();
       }
       else if(answer.postOrBid === 'BID') {
         bidAuction();
@@ -53,43 +53,11 @@ function start() {
     });
 }
 
-// function to handle posting new items up for auction
-function postAuction() {
-  // prompt for info about the item being put up for auction
-  inquirer
-    .prompt([
-      {
-        name: 'item',
-        type: 'input',
-        message: 'What is the item you would like to submit?'
-      },
-      {
-        name: 'category',
-        type: 'input',
-        message: 'What category would you like to place your auction in?'
-      },
-      {
-        name: 'startingBid',
-        type: 'input',
-        message: 'What would you like your starting bid to be?',
-        validate: function(value) {
-          if (isNaN(value) === false) {
-            return true;
-          }
-          return false;
-        }
-      }
-    ])
-    .then(function(answer) {
-      // when finished prompting, insert a new item into the db with that info
+// function to view all employees in the database
+function viewEmployees() {
+
       connection.query(
-        'INSERT INTO auctions SET ?',
-        {
-          item_name: answer.item,
-          category: answer.category,
-          starting_bid: answer.startingBid || 0,
-          highest_bid: answer.startingBid || 0
-        },
+        'SELECT  * FROM employee_db.employee;',
         function(err) {
           if (err) throw err;
           console.log('Your auction was created successfully!');
@@ -97,8 +65,8 @@ function postAuction() {
           start();
         }
       );
-    });
-}
+
+    }
 
 function bidAuction() {
   // query the database for all items being auctioned
