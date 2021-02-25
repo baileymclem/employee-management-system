@@ -50,6 +50,12 @@ function start() {
         viewRoles();
       } else if (answer.userChoice === "Add Employees") {
         addEmployee();
+      } else if (answer.userChoice === "Add Department") {
+        addDepartment();
+      } else if (answer.userChoice === "Add Role") {
+        addRole();
+      } else if (answer.userChoice === "Upate Employee Roles") {
+        updateEmployeeRoles();
       } else {
         connection.end();
       }
@@ -98,11 +104,6 @@ function viewRoles() {
 }
 
 function addEmployee() {
-  // let roles = results.map((role) => ({
-  //   name: role.title,
-  //   value: role.id,
-  // }));
-
   inquirer
     .prompt([
       {
@@ -129,7 +130,6 @@ function addEmployee() {
     ])
 
     .then(function (answer) {
-
       //console.log("answer", answer);
 
       connection.query(
@@ -151,7 +151,6 @@ function addEmployee() {
 }
 
 function addDepartment() {
-
   inquirer
     .prompt([
       {
@@ -162,7 +161,6 @@ function addDepartment() {
     ])
 
     .then(function (answer) {
-
       connection.query(
         "INSERT INTO department SET ?",
         {
@@ -176,4 +174,96 @@ function addDepartment() {
         }
       );
     });
-  }
+}
+
+function addRole() {
+  inquirer
+    .prompt([
+      {
+        name: "roleName",
+        type: "input",
+        message: "What is the role you want to add?",
+      },
+      {
+        name: "roleSalary",
+        type: "input",
+        message: "What is the salary?",
+      },
+      {
+        name: "roleDepartment",
+        type: "input",
+        message: "What is the department id?",
+      },
+    ])
+
+    .then(function (answer) {
+      connection.query(
+        "INSERT INTO employee_role SET ?",
+        {
+          title: answer.roleName,
+          salary: answer.roleSalary,
+          department_id: answer.roleDepartment,
+        },
+        function (err) {
+          if (err) throw err;
+          console.log("Role was added successfully!");
+
+          start();
+        }
+      );
+    });
+}
+
+//console.log("roles", viewRoles);
+function updateEmployeeRoles() {
+  connection.query(
+    "SELECT  * FROM employee_db.employee",
+    function (err, results) {
+      if (err) throw err;
+
+      inquirer
+        .prompt([
+          {
+            name: "choiceEmployee",
+            type: "list",
+            message: "Whose role do you want to update?",
+            choices: function () {
+              var choiceArray = [];
+              for (var i = 0; i < results.length; i++) {
+                choiceArray.push(results[i].first_name);
+              }
+              return choiceArray;
+            },
+          },
+          {
+            name: "newRole",
+            type: "input",
+            message: "What's the new role id?",
+          },
+        ])
+
+        .then(function (answer) {
+          var chosenEmployee;
+          for (var i = 0; i < results.length; i++) {
+            if (results[i].first_name === answer.choiceEmployee) {
+              chosenEmployee = results[i];
+            }
+          }
+
+          connection.query(
+            "UPDATE employee_db.employee SET ? WHERE ?",
+            {
+              id: chosenEmployee.id,
+              role_id: answer.newRole,
+            },
+            function (err) {
+              if (err) throw err;
+              console.log("Employee was updated successfully!");
+
+              start();
+            }
+          );
+        });
+    }
+  );
+}
