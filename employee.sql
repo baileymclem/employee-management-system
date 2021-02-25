@@ -23,7 +23,7 @@ CREATE TABLE department (
   PRIMARY KEY (id),
 );
 
-CREATE TABLE role (
+CREATE TABLE employee_role (
     id INTEGER Auto_Increment NOT NULL,
   title VARCHAR(30) NOT NULL,
   salary DECIMAL NOT NULL,

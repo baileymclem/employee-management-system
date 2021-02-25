@@ -1,4 +1,4 @@
-USE employee_db
+3E employee_db
 
 INSERT INTO department (name)
 VALUES ('Marketing'), ('Finance'), ('Engineering'), ('Operations'), ('Human Resources'), ('Design');
