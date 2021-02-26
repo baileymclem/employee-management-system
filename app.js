@@ -1,5 +1,6 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+//const { values } = require("sequelize/types/lib/operators");
 
 // create the connection information for the sql database
 var connection = mysql.createConnection({
@@ -54,7 +55,7 @@ function start() {
         addDepartment();
       } else if (answer.userChoice === "Add Role") {
         addRole();
-      } else if (answer.userChoice === "Upate Employee Roles") {
+      } else if (answer.userChoice === "Update Employee Roles") {
         updateEmployeeRoles();
       } else {
         connection.end();
@@ -64,43 +65,34 @@ function start() {
 
 // function to view all employees in the database
 function viewEmployees() {
-  connection.query(
-    "SELECT  * FROM employee_db.employee;",
-    function (err, results) {
-      if (err) throw err;
-      // console.log('results', results);
-      console.table(results);
+  connection.query("SELECT  * FROM employee;", function (err, results) {
+    if (err) throw err;
+    // console.log('results', results);
+    console.table(results);
 
-      start();
-    }
-  );
+    start();
+  });
 }
 
 function viewDepartments() {
   // query the database for all items being auctioned
-  connection.query(
-    "SELECT * FROM employee_db.department",
-    function (err, results) {
-      if (err) throw err;
-      // console.log('results', results);
-      console.table(results);
+  connection.query("SELECT * FROM department", function (err, results) {
+    if (err) throw err;
+    // console.log('results', results);
+    console.table(results);
 
-      start();
-    }
-  );
+    start();
+  });
 }
 
 function viewRoles() {
-  connection.query(
-    "SELECT  * FROM employee_db.employee_role",
-    function (err, results) {
-      if (err) throw err;
-      // console.log('results', results);
-      console.table(results);
+  connection.query("SELECT  * FROM employee_role", function (err, results) {
+    if (err) throw err;
+    // console.log('results', results);
+    console.table(results);
 
-      start();
-    }
-  );
+    start();
+  });
 }
 
 function addEmployee() {
@@ -214,53 +206,64 @@ function addRole() {
     });
 }
 
-//console.log("roles", viewRoles);
 function updateEmployeeRoles() {
+
   connection.query(
-    "SELECT  * FROM employee_db.employee",
+    "SELECT id, first_name, last_name FROM employee",
     function (err, results) {
       if (err) throw err;
 
+      let listChoices = results.map((employees) => {
+        var obj = {
+          name: `${employees.first_name} ${employees.last_name}`,
+          value: employees.id,
+        };
+        return obj;
+      });
+
       inquirer
-        .prompt([
-          {
-            name: "choiceEmployee",
-            type: "list",
-            message: "Whose role do you want to update?",
-            choices: function () {
-              var choiceArray = [];
-              for (var i = 0; i < results.length; i++) {
-                choiceArray.push(results[i].first_name);
-              }
-              return choiceArray;
-            },
-          },
-          {
-            name: "newRole",
-            type: "input",
-            message: "What's the new role id?",
-          },
-        ])
-
+        .prompt({
+          name: "employeeChoice",
+          type: "list",
+          message: "Whose role do you want to update?",
+          choices: listChoices,
+        })
         .then(function (answer) {
-          var chosenEmployee;
-          for (var i = 0; i < results.length; i++) {
-            if (results[i].first_name === answer.choiceEmployee) {
-              chosenEmployee = results[i];
-            }
-          }
-
           connection.query(
-            "UPDATE employee_db.employee SET ? WHERE ?",
-            {
-              id: chosenEmployee.id,
-              role_id: answer.newRole,
-            },
-            function (err) {
+            "SELECT id, title FROM employee_role",
+            function (err, results) {
               if (err) throw err;
-              console.log("Employee was updated successfully!");
 
-              start();
+              let roleChoices = results.map((roles) => {
+                var object = {
+                  name: roles.title,
+                  value: roles.id,
+                };
+                return object;
+              });
+
+              inquirer
+                .prompt({
+                  name: "roleChoice",
+                  type: "list",
+                  message: "Pick a role?",
+                  choices: roleChoices,
+                })
+                .then(function (answer2) {
+
+                  connection.query(
+                    "UPDATE employee SET role_id = ? WHERE id = ?",
+                    [answer2.roleChoice, answer.employeeChoice],
+                    function (err) {
+                      if (err) throw err;
+                      console.log("Role was updated successfully!");
+
+                      start();
+                    }
+                  );
+
+
+                });
             }
           );
         });
